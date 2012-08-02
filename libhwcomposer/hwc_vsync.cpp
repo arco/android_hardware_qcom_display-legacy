@@ -65,8 +65,6 @@ static void *vsync_loop(void *param)
        e.g. VSYNC=41800875994
     */
 
-    hwc_procs* proc = (hwc_procs*)ctx->device.reserved_proc[0];
-
     do {
         int hdmiconnected = ctx->mExtDisplay->getExternalDisplay();
 

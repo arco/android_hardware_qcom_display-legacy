@@ -64,7 +64,7 @@ hwc_module_t HAL_MODULE_INFO_SYM = {
 /*
  * Save callback functions registered to HWC
  */
-static void hwc_registerProcs(struct hwc_composer_device* dev,
+static void hwc_registerProcs(struct hwc_composer_device_1* dev,
                               hwc_procs_t const* procs)
 {
     hwc_context_t* ctx = (hwc_context_t*)(dev);
@@ -80,7 +80,8 @@ static void hwc_registerProcs(struct hwc_composer_device* dev,
     init_vsync_thread(ctx);
 }
 
-static int hwc_prepare(hwc_composer_device_t *dev, hwc_layer_list_t* list)
+static int hwc_prepare(hwc_composer_device_1 *dev, size_t numDisplays,
+                       hwc_display_contents_1_t** displays)
 {
     hwc_context_t* ctx = (hwc_context_t*)(dev);
     ctx->overlayInUse = false;
@@ -100,46 +101,49 @@ static int hwc_prepare(hwc_composer_device_t *dev, hwc_layer_list_t* list)
             ctx->hdmi_pending = false;
         }
     }
-    if (LIKELY(list)) {
-        //reset for this draw round
-        VideoOverlay::reset();
-        VideoPIP::reset();
-        ExtOnly::reset();
+    for (uint32_t i = 0; i <numDisplays; i++) {
+        hwc_display_contents_1_t* list = displays[i];
+        ctx->dpys[i] = list->dpy;
+        //XXX: Actually handle the multiple displays
+        if (LIKELY(list)) {
+            //reset for this draw round
+            VideoOverlay::reset();
+            VideoPIP::reset();
+            ExtOnly::reset();
 
-        getLayerStats(ctx, list);
-        // Mark all layers to COPYBIT initially
-        CopyBit::prepare(ctx, list);
-        if(VideoOverlay::prepare(ctx, list)) {
-            ctx->overlayInUse = true;
-            //Nothing here
-        } else if(VideoPIP::prepare(ctx, list)) {
-            ctx->overlayInUse = true;
-        } else if(ExtOnly::prepare(ctx, list)) {
-            ctx->overlayInUse = true;
-        } else if(UIMirrorOverlay::prepare(ctx, list)) {
-            ctx->overlayInUse = true;
-        } else if(MDPComp::configure(dev, list)) {
-            ctx->overlayInUse = true;
-        } else if (0) {
-            //Other features
-            ctx->overlayInUse = true;
-        } else { // Else set this flag to false, otherwise video cases
-                 // fail in non-overlay targets.
+            getLayerStats(ctx, list);
+            // Mark all layers to COPYBIT initially
+            CopyBit::prepare(ctx, list);
+            if(VideoOverlay::prepare(ctx, list)) {
+                ctx->overlayInUse = true;
+                //Nothing here
+            } else if(VideoPIP::prepare(ctx, list)) {
+                ctx->overlayInUse = true;
+            } else if(ExtOnly::prepare(ctx, list)) {
+                ctx->overlayInUse = true;
+            } else if(UIMirrorOverlay::prepare(ctx, list)) {
+                ctx->overlayInUse = true;
+            } else if(MDPComp::configure(dev, list)) {
+                ctx->overlayInUse = true;
+            } else if (0) {
+                //Other features
+                ctx->overlayInUse = true;
+            } else { // Else set this flag to false, otherwise video cases
+                     // fail in non-overlay targets.
+                ctx->overlayInUse = false;
+                ctx->mOverlay->setState(ovutils::OV_CLOSED);
+            }
+            qdutils::CBUtils::checkforGPULayer(list);
+        } else {
             ctx->overlayInUse = false;
             ctx->mOverlay->setState(ovutils::OV_CLOSED);
+            ctx->qbuf->unlockAll();
         }
-        qdutils::CBUtils::checkforGPULayer(list);
-
-    } else {
-        ctx->overlayInUse = false;
-        ctx->mOverlay->setState(ovutils::OV_CLOSED);
-        ctx->qbuf->unlockAll();
-
     }
     return 0;
 }
 
-static int hwc_eventControl(struct hwc_composer_device* dev,
+static int hwc_eventControl(struct hwc_composer_device_1* dev, int dpy,
                              int event, int enabled)
 {
     int ret = 0;
@@ -147,6 +151,7 @@ static int hwc_eventControl(struct hwc_composer_device* dev,
     hwc_context_t* ctx = (hwc_context_t*)(dev);
     private_module_t* m = reinterpret_cast<private_module_t*>(
                 ctx->mFbDev->common.module);
+    //XXX: Handle dpy
     switch(event) {
 #ifndef NO_HW_VSYNC
         case HWC_EVENT_VSYNC:
@@ -168,7 +173,18 @@ static int hwc_eventControl(struct hwc_composer_device* dev,
     return ret;
 }
 
-static int hwc_query(struct hwc_composer_device* dev,
+static int hwc_blank(struct hwc_composer_device_1* dev, int dpy, int blank)
+{
+    //XXX: Handle based on dpy
+    if(blank) {
+        hwc_context_t* ctx = (hwc_context_t*)(dev);
+        ctx->mOverlay->setState(ovutils::OV_CLOSED);
+        ctx->qbuf->unlockAllPrevious();
+    }
+    return 0;
+}
+
+static int hwc_query(struct hwc_composer_device_1* dev,
                      int param, int* value)
 {
     hwc_context_t* ctx = (hwc_context_t*)(dev);
@@ -191,37 +207,38 @@ static int hwc_query(struct hwc_composer_device* dev,
 
 }
 
-static int hwc_set(hwc_composer_device_t *dev,
-                   hwc_display_t dpy,
-                   hwc_surface_t sur,
-                   hwc_layer_list_t* list)
+static int hwc_set(hwc_composer_device_1 *dev,
+                   size_t numDisplays,
+                   hwc_display_contents_1_t** displays)
 {
     int ret = 0;
     hwc_context_t* ctx = (hwc_context_t*)(dev);
-    if (dpy && sur) {
-        if (LIKELY(list)) {
-            VideoOverlay::draw(ctx, list);
-            VideoPIP::draw(ctx,list);
-            ExtOnly::draw(ctx, list);
-            CopyBit::draw(ctx, list, (EGLDisplay)dpy, (EGLSurface)sur);
-            MDPComp::draw(ctx, list);
+    for (uint32_t i = 0; i <numDisplays; i++) {
+        hwc_display_contents_1_t* list = displays[i];
+        if (list->dpy && list->sur) {
+            if (LIKELY(list)) {
+                VideoOverlay::draw(ctx, list);
+                VideoPIP::draw(ctx,list);
+                ExtOnly::draw(ctx, list);
+                CopyBit::draw(ctx, list, (EGLDisplay)list->dpy, (EGLSurface)list->sur);
+                MDPComp::draw(ctx, list);
+            }
+            eglSwapBuffers((EGLDisplay)list->dpy, (EGLSurface)list->sur);
+            if (ctx->mMDP.hasOverlay) {
+                wait4fbPost(ctx);
+                //Can draw to HDMI only when fb_post is reached
+                UIMirrorOverlay::draw(ctx);
+                //HDMI commit and primary commit (PAN) happening in parallel
+                if(ctx->mExtDisplay->getExternalDisplay())
+                    ctx->mExtDisplay->commit();
+                //Virtual barrier for threads to finish
+                wait4Pan(ctx);
+            }
+        } else {
+            ctx->mOverlay->setState(ovutils::OV_CLOSED);
+            ctx->qbuf->unlockAll();
         }
-        eglSwapBuffers((EGLDisplay)dpy, (EGLSurface)sur);
-        if (ctx->mMDP.hasOverlay) {
-            wait4fbPost(ctx);
-            //Can draw to HDMI only when fb_post is reached
-            UIMirrorOverlay::draw(ctx);
-            //HDMI commit and primary commit (PAN) happening in parallel
-            if(ctx->mExtDisplay->getExternalDisplay())
-                ctx->mExtDisplay->commit();
-            //Virtual barrier for threads to finish
-            wait4Pan(ctx);
-        }
-    } else {
-        ctx->mOverlay->setState(ovutils::OV_CLOSED);
-        ctx->qbuf->unlockAll();
     }
-
 
     ctx->qbuf->unlockAllPrevious();
     return ret;
@@ -253,17 +270,17 @@ static int hwc_device_open(const struct hw_module_t* module, const char* name,
         initContext(dev);
 
         //Setup HWC methods
-        hwc_methods_t *methods;
-        methods = (hwc_methods_t *)malloc(sizeof(*methods));
+        hwc_methods_1_t *methods;
+        methods = (hwc_methods_1_t *) malloc(sizeof(*methods));
         memset(methods, 0, sizeof(*methods));
         methods->eventControl = hwc_eventControl;
-
+        methods->blank = hwc_blank;
         dev->device.common.tag     = HARDWARE_DEVICE_TAG;
 #ifdef NO_HW_VSYNC
         dev->device.common.version = 0;
         ALOGI("%s: Hardware VSYNC not supported", __FUNCTION__);
 #else
-        dev->device.common.version = HWC_DEVICE_API_VERSION_0_3;
+        dev->device.common.version = HWC_DEVICE_API_VERSION_1_0;
         ALOGI("%s: Hardware VSYNC supported", __FUNCTION__);
 #endif
         dev->device.common.module  = const_cast<hw_module_t*>(module);
