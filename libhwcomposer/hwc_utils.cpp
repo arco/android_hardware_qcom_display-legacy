@@ -112,9 +112,6 @@ void closeContext(hwc_context_t *ctx)
 
     pthread_mutex_destroy(&(ctx->vstate.lock));
     pthread_cond_destroy(&(ctx->vstate.cond));
-
-    free(const_cast<hwc_methods_1_t *>(ctx->device.methods));
-
 }
 
 void dumpLayer(hwc_layer_1_t const* l)

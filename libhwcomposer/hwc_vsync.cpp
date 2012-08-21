@@ -158,7 +158,7 @@ static void *vsync_loop(void *param)
         // send timestamp to HAL
         ALOGD_IF (VSYNC_DEBUG, "%s: timestamp %llu sent to HWC for %s",
               __FUNCTION__, cur_timestamp, (fb1_vsync) ? "fb1" : "fb0");
-        proc->vsync(proc, 0, cur_timestamp);
+        ctx->proc->vsync(ctx->proc, 0, cur_timestamp);
         // close open fds
         if(fd_timestamp >= 0)
             close (fd_timestamp);
