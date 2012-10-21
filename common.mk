@@ -35,6 +35,10 @@ ifeq ($(TARGET_BOARD_PLATFORM), msm8974)
     common_flags += -DVENUS_COLOR_FORMAT
 endif
 
+ifeq ($(TARGET_QCOM_HDMI_RESOLUTION_AUTO),true)
+    common_flags += -DFORCE_AUTO_RESOLUTION
+endif
+
 common_deps  :=
 kernel_includes :=
 
