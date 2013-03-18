@@ -140,7 +140,7 @@ static int hwc_prepare(hwc_composer_device_t *dev, hwc_layer_list_t* list)
 }
 
 static int hwc_eventControl(struct hwc_composer_device* dev,
-                             int event, int value)
+                             int event, int enabled)
 {
     int ret = 0;
 
@@ -150,21 +150,18 @@ static int hwc_eventControl(struct hwc_composer_device* dev,
     switch(event) {
 #ifndef NO_HW_VSYNC
         case HWC_EVENT_VSYNC:
-            if (ctx->vstate.enable == value)
+            if (ctx->vstate.enable == enabled)
                 break;
 
             pthread_mutex_lock(&ctx->vstate.lock);
-            ctx->vstate.enable = !!value;
+            ctx->vstate.enable = !!enabled;
             pthread_cond_signal(&ctx->vstate.cond);
 
             ALOGD_IF (VSYNC_DEBUG, "VSYNC state changed to %s",
-                                           (value)?"ENABLED":"DISABLED");
+                                           (enabled)?"ENABLED":"DISABLED");
             pthread_mutex_unlock(&ctx->vstate.lock);
             break;
 #endif
-       case HWC_EVENT_ORIENTATION:
-             ctx->deviceOrientation = value;
-           break;
         default:
             ret = -EINVAL;
     }
