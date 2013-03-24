@@ -82,12 +82,14 @@ static void *vsync_loop(void *param)
         while (ctx->vstate.enable == false) {
             if(enabled) {
                 int e = 0;
+#ifndef NO_HW_VSYNC
                 if(ioctl(m->framebuffer->fd, MSMFB_OVERLAY_VSYNC_CTRL,
                                                                 &e) < 0) {
                     ALOGE("%s: vsync control failed for fb0 enabled=%d : %s",
                                   __FUNCTION__, enabled, strerror(errno));
                     ret = -errno;
                 }
+#endif
                 if(fb1_vsync) {
                     ret = ctx->mExtDisplay->enableHDMIVsync(e);
                 }
@@ -99,12 +101,14 @@ static void *vsync_loop(void *param)
 
         if (!enabled) {
             int e = 1;
+#ifndef NO_HW_VSYNC
             if(ioctl(m->framebuffer->fd, MSMFB_OVERLAY_VSYNC_CTRL,
                                                             &e) < 0) {
                 ALOGE("%s: vsync control failed for fb0 enabled=%d : %s",
                                  __FUNCTION__, enabled, strerror(errno));
                 ret = -errno;
             }
+#endif
             if(fb1_vsync) {
                 ret = ctx->mExtDisplay->enableHDMIVsync(e);
             }
