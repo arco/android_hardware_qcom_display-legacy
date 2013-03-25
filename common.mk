@@ -28,3 +28,7 @@ endif
 ifeq ($(TARGET_NO_HW_VSYNC),true)
     common_flags += -DNO_HW_VSYNC
 endif
+
+ifeq ($(TARGET_USES_QCOM_BSP),true)
+    common_flags += -DQCOM_BSP
+endif
