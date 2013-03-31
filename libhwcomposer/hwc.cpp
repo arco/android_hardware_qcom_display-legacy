@@ -185,8 +185,8 @@ static int hwc_eventControl(struct hwc_composer_device_1* dev, int dpy,
             prev_value = enabled;
             /* vsync state change logic - end*/
 
-             if(ctx->mExtDisplay->isHDMIConfigured() &&
-                (ctx->mExtDisplay->getExternalDisplay()==EXTERN_DISPLAY_FB1)) {
+            if(ctx->mExtDisplay->isHDMIConfigured() &&
+                 (ctx->mExtDisplay->getExternalDisplay()==EXTERN_DISPLAY_FB1)) {
                 // enableHDMIVsync will return -errno on error
                 ret = ctx->mExtDisplay->enableHDMIVsync(enabled);
              }
