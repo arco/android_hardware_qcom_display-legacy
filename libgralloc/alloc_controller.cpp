@@ -135,12 +135,7 @@ int IonController::allocate(alloc_data& data, int usage)
         ionFlags = ION_HEAP(ION_SF_HEAP_ID) | ION_HEAP(ION_IOMMU_HEAP_ID);
 
     data.flags = ionFlags;
-
-    if (canFallback(usage,(ionFlags & ION_SYSTEM_HEAP_ID))) {
-        ret = mIonAlloc->alloc_buffer(data, true);
-    } else {
-        ret = mIonAlloc->alloc_buffer(data);
-    }
+    ret = mIonAlloc->alloc_buffer(data);
 
     // Fallback to CAMERA PREVIEW heap if
     // allocation is for fb1 AND
