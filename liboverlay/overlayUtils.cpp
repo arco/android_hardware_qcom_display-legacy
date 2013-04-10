@@ -263,6 +263,40 @@ int getMdpFormat(int format) {
     return -1;
 }
 
+int getMdpOrient(eTransform rotation) {
+    int retTrans = 0;
+    bool trans90 = false;
+    int mdpVersion = qdutils::MDPVersion::getInstance().getMDPVersion();
+    bool aFamily = (mdpVersion < qdutils::MDSS_V5);
+
+    ALOGD_IF(DEBUG_OVERLAY, "%s: In rotation = %d", __FUNCTION__, rotation);
+    if(rotation & OVERLAY_TRANSFORM_ROT_90) {
+        retTrans |= MDP_ROT_90;
+        trans90 = true;
+    }
+
+    if(rotation & OVERLAY_TRANSFORM_FLIP_H) {
+        if(trans90 && aFamily) {
+            //Swap for a-family, since its driver does 90 first
+            retTrans |= MDP_FLIP_UD;
+        } else {
+            retTrans |= MDP_FLIP_LR;
+        }
+    }
+
+    if(rotation & OVERLAY_TRANSFORM_FLIP_V) {
+        if(trans90 && aFamily) {
+            //Swap for a-family, since its driver does 90 first
+            retTrans |= MDP_FLIP_LR;
+        } else {
+            retTrans |= MDP_FLIP_UD;
+        }
+    }
+
+    ALOGD_IF(DEBUG_OVERLAY, "%s: Out rotation = %d", __FUNCTION__, retTrans);
+    return retTrans;
+}
+
 int getOverlayMagnificationLimit()
 {
     if(qdutils::MDPVersion::getInstance().getMDPVersion() > 400)
