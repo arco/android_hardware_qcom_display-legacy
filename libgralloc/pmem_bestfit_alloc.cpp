@@ -149,7 +149,7 @@ ssize_t SimpleBestFitAllocator::alloc(size_t size, uint32_t flags)
         // read next node
         cur = cur->next;
     }
-    ALOGD (" Total Allocated: %l Total Free: %l", allocated, free_space );
+    ALOGD (" Total Allocated: %lld Total Free: %lld", allocated, free_space );
 
     node_count = 0;
     allocated = 0;
