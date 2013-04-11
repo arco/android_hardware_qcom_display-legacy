@@ -83,14 +83,15 @@ int gpu_context_t::gralloc_alloc_framebuffer_locked(size_t size, int usage,
         return -ENOMEM;
     }
 
-    // create a "fake" handle for it
+    // create a "fake" handles for it
+    // Set the PMEM flag as well, since adreno
+    // treats the FB memory as pmem
     intptr_t vaddr = intptr_t(m->framebuffer->base);
-    private_handle_t* hnd = new private_handle_t(
-                                dup(m->framebuffer->fd), bufferSize,
-                                private_handle_t::PRIV_FLAGS_USES_ION |
-                                private_handle_t::PRIV_FLAGS_FRAMEBUFFER,
-                                BUFFER_TYPE_UI, m->fbFormat, m->info.xres,
-                                m->info.yres);
+    private_handle_t* hnd = new private_handle_t(dup(m->framebuffer->fd), bufferSize,
+                                                 private_handle_t::PRIV_FLAGS_USES_PMEM |
+                                                 private_handle_t::PRIV_FLAGS_FRAMEBUFFER,
+                                                 BUFFER_TYPE_UI, m->fbFormat, m->info.xres,
+                                                 m->info.yres);
 
     // find a free slot
     for (uint32_t i=0 ; i<numBuffers ; i++) {
