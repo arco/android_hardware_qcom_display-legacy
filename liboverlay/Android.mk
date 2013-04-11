@@ -16,7 +16,10 @@ LOCAL_SRC_FILES := \
       overlayMdp.cpp \
       overlayRotator.cpp \
       overlayMdpRot.cpp \
-      overlayMdssRot.cpp \
       pipes/overlayGenPipe.cpp
+
+ifeq ($(BOARD_OVERLAY_MDSS), true)
+LOCAL_SRC_FILES += overlayMdssRot.cpp
+endif
 
 include $(BUILD_SHARED_LIBRARY)

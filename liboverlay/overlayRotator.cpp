@@ -31,8 +31,10 @@ Rotator* Rotator::getRotator() {
     int type = getRotatorHwType();
     if(type == TYPE_MDP) {
         return new MdpRot(); //will do reset
+#ifdef OVERLAY_MDSS
     } else if(type == TYPE_MDSS) {
         return new MdssRot();
+#endif
     } else {
         ALOGE("%s Unknown h/w type %d", __FUNCTION__, type);
         return NULL;
