@@ -45,7 +45,9 @@ struct private_module_t {
     pthread_mutex_t lock;
     private_handle_t *currentBuffer;
     struct fb_var_screeninfo info;
+#ifdef MSMFB_DISPLAY_COMMIT
     struct mdp_display_commit commit;
+#endif
     struct fb_fix_screeninfo finfo;
     float xdpi;
     float ydpi;

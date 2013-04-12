@@ -550,12 +550,18 @@ bool ExternalDisplay::post()
 {
     if(mFd == -1)
         return false;
+#ifdef MSMFB_DISPLAY_COMMIT
     struct mdp_display_commit ext_commit;
     memset(&ext_commit, 0, sizeof(struct mdp_display_commit));
     ext_commit.flags = MDP_DISPLAY_COMMIT_OVERLAY;
     if (ioctl(mFd, MSMFB_DISPLAY_COMMIT, &ext_commit) == -1) {
         ALOGE("%s: MSMFB_DISPLAY_COMMIT for external failed, str: %s",
                 __FUNCTION__, strerror(errno));
+#else
+    if (ioctl(mFd, FBIOPUT_VSCREENINFO, &mVInfo) == -1) {
+         ALOGE("%s: FBIOPUT_VSCREENINFO failed, str: %s",
+                __FUNCTION__, strerror(errno));
+#endif
         return false;
     }
     return true;
