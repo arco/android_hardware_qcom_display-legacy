@@ -111,11 +111,17 @@ static int fb_post(struct framebuffer_device_t* dev, buffer_handle_t buffer)
     if (hnd) {
         m->info.activate = FB_ACTIVATE_VBL | FB_ACTIVATE_FORCE;
         m->info.yoffset = hnd->offset / m->finfo.line_length;
+#ifdef MSMFB_DISPLAY_COMMIT
         m->commit.var = m->info;
         m->commit.flags |= MDP_DISPLAY_COMMIT_OVERLAY;
         if (ioctl(m->framebuffer->fd, MSMFB_DISPLAY_COMMIT, &m->commit) == -1) {
             ALOGE("%s: MSMFB_DISPLAY_COMMIT ioctl failed, err: %s", __FUNCTION__,
                     strerror(errno));
+#else
+        if (ioctl(m->framebuffer->fd, FBIOPUT_VSCREENINFO, &m->info) == -1) {
+            ALOGE("%s: FBIOPUT_VSCREENINFO ioctl failed, err: %s", __FUNCTION__,
+                    strerror(errno));
+#endif
             return -errno;
         }
     }
@@ -154,7 +160,9 @@ int mapFrameBufferLocked(struct private_module_t* module)
     if (fd < 0)
         return -errno;
 
+#ifdef MSMFB_DISPLAY_COMMIT
     memset(&module->commit, 0, sizeof(struct mdp_display_commit));
+#endif
 
     struct fb_fix_screeninfo finfo;
     if (ioctl(fd, FBIOGET_FSCREENINFO, &finfo) == -1)
