@@ -34,22 +34,33 @@ enum {
     /* gralloc usage bits indicating the type
      * of allocation that should be used */
 
-    /* SYSTEM heap comes from kernel vmalloc,
-     * can never be uncached, is not secured*/
-    GRALLOC_USAGE_PRIVATE_SYSTEM_HEAP     =       GRALLOC_USAGE_PRIVATE_0,
+    /* ADSP heap is deprecated, use only if using pmem */
+    GRALLOC_USAGE_PRIVATE_ADSP_HEAP       =       GRALLOC_USAGE_PRIVATE_0,
     /* SF heap is used for application buffers, is not secured */
     GRALLOC_USAGE_PRIVATE_UI_CONTIG_HEAP  =       GRALLOC_USAGE_PRIVATE_1,
+    /* SMI heap is deprecated, use only if using pmem */
+    GRALLOC_USAGE_PRIVATE_SMI_HEAP        =       GRALLOC_USAGE_PRIVATE_2,
+    /* SYSTEM heap comes from kernel vmalloc,
+     * can never be uncached, is not secured*/
+    GRALLOC_USAGE_PRIVATE_SYSTEM_HEAP     =       GRALLOC_USAGE_PRIVATE_3,
     /* IOMMU heap comes from manually allocated pages,
      * can be cached/uncached, is not secured */
-    GRALLOC_USAGE_PRIVATE_IOMMU_HEAP      =       GRALLOC_USAGE_PRIVATE_2,
+    GRALLOC_USAGE_PRIVATE_IOMMU_HEAP      =       0x01000000,
     /* MM heap is a carveout heap for video, can be secured*/
-    GRALLOC_USAGE_PRIVATE_MM_HEAP         =       GRALLOC_USAGE_PRIVATE_3,
+    GRALLOC_USAGE_PRIVATE_MM_HEAP         =       0x02000000,
+    /* WRITEBACK heap is a carveout heap for writeback, can be secured*/
+    GRALLOC_USAGE_PRIVATE_WRITEBACK_HEAP  =       0x04000000,
     /* CAMERA heap is a carveout heap for camera, is not secured*/
-    GRALLOC_USAGE_PRIVATE_CAMERA_HEAP     =       0x01000000,
+    GRALLOC_USAGE_PRIVATE_CAMERA_HEAP     =       0x08000000,
 
     /* Set this for allocating uncached memory (using O_DSYNC)
      * cannot be used with noncontiguous heaps */
-    GRALLOC_USAGE_PRIVATE_UNCACHED        =       0x02000000,
+    GRALLOC_USAGE_PRIVATE_UNCACHED        =       0x00100000,
+
+    /* This flag needs to be set when using a non-contiguous heap from ION.
+     * If not set, the system heap is assumed to be coming from ashmem
+     */
+    GRALLOC_USAGE_PRIVATE_ION             =       0x00200000,
 
     /* This flag can be set to disable genlock synchronization
      * for the gralloc buffer. If this flag is set the caller
@@ -57,7 +68,10 @@ enum {
      * WARNING - flag is outside the standard PRIVATE region
      * and may need to be moved if the gralloc API changes
      */
-    GRALLOC_USAGE_PRIVATE_UNSYNCHRONIZED  =       0X04000000,
+    GRALLOC_USAGE_PRIVATE_UNSYNCHRONIZED  =       0X00400000,
+
+    /* Set this flag when you need to avoid mapping the memory in userspace */
+    GRALLOC_USAGE_PRIVATE_DO_NOT_MAP      =       0X00800000,
 
     /* Buffer content should be displayed on an external display only */
     GRALLOC_USAGE_PRIVATE_EXTERNAL_ONLY   =       0x08000000,
@@ -84,14 +98,12 @@ enum {
     GRALLOC_MODULE_PERFORM_CREATE_HANDLE_FROM_BUFFER = 0x080000001,
 };
 
-#define GRALLOC_HEAP_MASK   (GRALLOC_USAGE_PRIVATE_UI_CONTIG_HEAP |\
-                             GRALLOC_USAGE_PRIVATE_SYSTEM_HEAP    |\
-                             GRALLOC_USAGE_PRIVATE_IOMMU_HEAP     |\
-                             GRALLOC_USAGE_PRIVATE_MM_HEAP        |\
-                             GRALLOC_USAGE_PRIVATE_CAMERA_HEAP)
 
 #define INTERLACE_MASK 0x80
 #define S3D_FORMAT_MASK 0xFF000
+#define DEVICE_PMEM "/dev/pmem"
+#define DEVICE_PMEM_ADSP "/dev/pmem_adsp"
+#define DEVICE_PMEM_SMIPOOL "/dev/pmem_smipool"
 /*****************************************************************************/
 enum {
     /* OEM specific HAL formats */
