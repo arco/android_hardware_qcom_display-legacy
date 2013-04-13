@@ -63,6 +63,7 @@ static void *vsync_loop(void *param)
     /* Currently read vsync timestamp from drivers
        e.g. VSYNC=41800875994
     */
+#ifndef NO_HW_VSYNC
     fd_timestamp = open(vsync_timestamp_fb0, O_RDONLY);
     if (fd_timestamp < 0) {
         ALOGE ("FATAL:%s:not able to open file:%s, %s",  __FUNCTION__,
@@ -70,8 +71,10 @@ static void *vsync_loop(void *param)
                strerror(errno));
         return NULL;
     }
+#endif
 
     do {
+#ifndef NO_HW_VSYNC
         pthread_mutex_lock(&ctx->vstate.lock);
         while (ctx->vstate.enable == false) {
             if(enabled) {
@@ -130,6 +133,10 @@ static void *vsync_loop(void *param)
        ALOGD_IF (VSYNC_DEBUG, "%s: timestamp %llu sent to HWC for %s",
             __FUNCTION__, cur_timestamp, "fb0");
        ctx->proc->vsync(ctx->proc, dpy, cur_timestamp);
+#else
+        usleep(16000);
+        ctx->proc->vsync(ctx->proc, dpy, systemTime());
+#endif
 
     } while (true);
     if(fd_timestamp >= 0)

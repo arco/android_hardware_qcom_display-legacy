@@ -501,6 +501,11 @@ static int hwc_device_open(const struct hw_module_t* module, const char* name,
 
         //Setup HWC methods
         dev->device.common.tag          = HARDWARE_DEVICE_TAG;
+#ifdef NO_HW_VSYNC
+        ALOGI("%s: Faking hardware VSYNC", __FUNCTION__);
+#else
+        ALOGI("%s: Hardware VSYNC supported", __FUNCTION__);
+#endif
         dev->device.common.version      = HWC_DEVICE_API_VERSION_1_1;
         dev->device.common.module       = const_cast<hw_module_t*>(module);
         dev->device.common.close        = hwc_device_close;
