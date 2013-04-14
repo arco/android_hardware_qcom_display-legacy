@@ -21,6 +21,10 @@
 #include "external.h"
 #include "mdp_version.h"
 
+#ifndef MDP_RGB_BORDERFILL
+#define MDP_RGB_BORDERFILL 1
+#endif
+
 namespace qhwc {
 
 namespace ovutils = overlay::utils;
