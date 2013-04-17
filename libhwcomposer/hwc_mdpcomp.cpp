@@ -195,8 +195,7 @@ int MDPComp::prepare(hwc_context_t *ctx, hwc_layer_1_t *layer,
         if(isYuvBuffer(hnd))
             setVidInfo(layer, mdpFlags);
 
-        if (!(isYuvBuffer(hnd) &&
-                    (qdutils::MDPVersion::getInstance().getMDPVersion() < qdutils::MDP_V4_2)))
+        if (!isYuvBuffer(hnd))
             ovutils::setMdpFlags(mdpFlags,ovutils::OV_MDP_BACKEND_COMPOSITION);
 
         if(layer->blending == HWC_BLENDING_PREMULT) {
