@@ -32,6 +32,9 @@
 #include "string.h"
 #include "external.h"
 
+#ifndef MSMFB_OVERLAY_VSYNC_CTRL
+#define MSMFB_OVERLAY_VSYNC_CTRL  _IOW(MSMFB_IOCTL_MAGIC, 160, unsigned int)
+#endif
 
 namespace qhwc {
 
