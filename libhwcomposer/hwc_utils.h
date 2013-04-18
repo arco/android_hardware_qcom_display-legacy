@@ -18,7 +18,9 @@
 #ifndef HWC_UTILS_H
 #define HWC_UTILS_H
 
+#ifndef HWC_REMOVE_DEPRECATED_VERSIONS
 #define HWC_REMOVE_DEPRECATED_VERSIONS 1
+#endif
 #include <fcntl.h>
 #include <hardware/hwcomposer.h>
 #include <gr.h>
