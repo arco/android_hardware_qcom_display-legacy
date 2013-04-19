@@ -191,11 +191,15 @@ int mapFrameBufferLocked(struct private_module_t* module)
         /*
          * Explicitly request RGBA_8888
          */
-#ifdef SEMC_RGBA_8888_OFFSET
+#if defined(SEMC_RGBA_8888_OFFSET) || defined(HTC_RGBA_8888_OFFSET)
         info.red.offset     = 0;
         info.green.offset   = 8;
         info.blue.offset    = 16;
+#ifdef SEMC_RGBA_8888_OFFSET
         info.transp.offset  = 24;
+#else
+        info.transp.offset  = 0;
+#endif
 #else
         info.red.offset     = 24;
         info.green.offset   = 16;
