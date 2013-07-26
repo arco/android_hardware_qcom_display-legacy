@@ -69,14 +69,14 @@ static int connectPmem(int fd, int master_fd) {
     return 0;
 }
 
-static int mapSubRegion(int fd, int offset, size_t size) {
+static int mapSubRegion(int fd, unsigned int offset, size_t size) {
     struct pmem_region sub = { offset, size };
     if (ioctl(fd, PMEM_MAP, &sub))
         return -errno;
     return 0;
 }
 
-static int unmapSubRegion(int fd, int offset, size_t size) {
+static int unmapSubRegion(int fd, unsigned int offset, size_t size) {
     struct pmem_region sub = { offset, size };
     if (ioctl(fd, PMEM_UNMAP, &sub))
         return -errno;
